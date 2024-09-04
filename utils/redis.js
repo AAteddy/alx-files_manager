@@ -18,7 +18,8 @@ class RedisClient {
 
     /**
      * Checks if the Redis client is alive
-     * @returns {boolean} - true if Redis client is connected, false otherwise
+     * @returns {boolean} - true if Redis client is connected,
+     * false otherwise
      */
     isAlive() {
         return this.client.connected;
@@ -27,7 +28,8 @@ class RedisClient {
     /**
      * Gets the value associated with a key from Redis
      * @param {string} key - The key to search for
-     * @returns {Promise<string | null>} - The value associated with the key or null if key does not exist
+     * @returns {Promise<string | null>} - The value associated with the key
+     * or null if key does not exist
      */
     async get(key) {
         return new Promise((resolve, reject) => {
