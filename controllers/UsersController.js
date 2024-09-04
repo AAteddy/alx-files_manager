@@ -1,41 +1,34 @@
 import dbClient from '../utils/db';
-import sha1 from 'sha1';
+import redisClient from '../utils/redis';
 
 class UsersController {
+    // Existing methods...
+
     /**
-     * Handles POST /users
-     * Creates a new user in the database
+     * Handles GET /users/me
+     * Retrieves the authenticated user's details
      * @param {Object} req - The request object
      * @param {Object} res - The response object
      */
-    static async postNew(req, res) {
-        const { email, password } = req.body;
+    static async getMe(req, res) {
+        const token = req.headers['x-token'];
 
-        // Validate email and password
-        if (!email) {
-            return res.status(400).json({ error: 'Missing email' });
-        }
-        if (!password) {
-            return res.status(400).json({ error: 'Missing password' });
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        // Check if the email already exists
-        const existingUser = await dbClient.usersCollection().findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Already exist' });
+        const userId = await redisClient.get(`auth_${token}`);
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        // Hash the password using SHA1
-        const hashedPassword = sha1(password);
+        const user = await dbClient.usersCollection().findOne({ _id: dbClient.ObjectId(userId) });
 
-        // Insert the new user into the database
-        const result = await dbClient.usersCollection().insertOne({
-            email,
-            password: hashedPassword,
-        });
+        if (!user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
 
-        // Respond with the new user's id and email
-        return res.status(201).json({ id: result.insertedId, email });
+        return res.status(200).json({ id: user._id, email: user.email });
     }
 }
 
